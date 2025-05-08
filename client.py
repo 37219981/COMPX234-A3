@@ -27,3 +27,13 @@ def main():
                     if len(collated) > 970:
                        print(f"Error: collated size exceeds 970 characters in {line}")
                        continue
+
+                    if cmd == 'PUT':
+                        request = f"{len(f'P {key} {value}'):03d} P {key} {value}"
+                    elif cmd in ('READ', 'GET'):
+                          request = f"{len(f'{cmd[0]} {key}'):03d} {cmd[0]} {key}"
+                    else:
+                        print(f"Invalid command: {cmd} in {line}")
+                        continue
+
+                    s.sendall(request.encode('utf-8'))
