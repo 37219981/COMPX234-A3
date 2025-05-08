@@ -65,3 +65,6 @@ def receive_full_response(s):
         return data
     except:
         return None
+
+if __name__ == "__main__":
+    main()
