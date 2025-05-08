@@ -16,3 +16,14 @@ def main():
                     line = line.strip()
                     if not line:
                         continue
+                    parts = line.split(' ', 2)
+                    if len(parts) < 2 or len(parts) > 3:
+                       print(f"Invalid format: {line}")
+                       continue
+                    cmd, key = parts[0], parts[1]
+                    value = parts[2] if len(parts) == 3 else None
+
+                    collated = f"{key} {value}" if value else key
+                    if len(collated) > 970:
+                       print(f"Error: collated size exceeds 970 characters in {line}")
+                       continue
