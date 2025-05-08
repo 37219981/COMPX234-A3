@@ -44,3 +44,24 @@ def main():
                         break
 
                     print(f"{line}: {response[4:]}")
+
+    except Exception as e:
+        print(f"Client error: {e}")
+
+
+def receive_full_response(s):
+    "" "Receive complete response message" ""
+    try:
+        len_str = s.recv(3).decode('utf-8')
+        if not len_str:
+            return None
+        total_len = int(len_str)
+        data = len_str
+        while len(data) < total_len:
+            chunk = s.recv(total_len - len(data)).decode('utf-8')
+            if not chunk:
+                break
+            data += chunk
+        return data
+    except:
+        return None
