@@ -70,6 +70,46 @@ class TupleSpaceServer:
                          response = self.handle_put(key, value)
                      else:
                          response = self.generate_error_response(key, "invalid command")
-                        
+
                 conn.sendall(response.encode('utf-8'))
+
+        except Exception as e:
+            print(f"Client {addr} error: {e}")
+        finally:
+            conn.close()
+            print(f"Client {addr} disconnected")
+
+    def handle_read(self, key):
+        """Process READ operation"""
+        if key in self.tuple_space:
+            v = self.tuple_space[key]
+            return f"{len(f'OK ({key}, {v}) read'):03d} OK ({key}, {v}) read"
+        else:
+            self.stats["errors"] += 1
+            return f"{len(f'ERR {key} does not exist'):03d} ERR {key} does not exist"
+
+    def handle_get(self, key):
+        """Handle GET operations"""
+        if key in self.tuple_space:
+            v = self.tuple_space.pop(key)
+            self.stats["total_tuple_size"] -= len(key) + len(v)
+            self.stats["total_key_size"] -= len(key)
+            self.stats["total_value_size"] -= len(v)
+            return f"{len(f'OK ({key}, {v}) removed'):03d} OK ({key}, {v}) removed"
+        else:
+            self.stats["errors"] += 1
+            return f"{len(f'ERR {key} does not exist'):03d} ERR {key} does not exist"
+
+    def handle_put(self, key, value):
+        """Process PUT operation"""
+        if key in self.tuple_space:
+            self.stats["errors"] += 1
+            return f"{len(f'ERR {key} already exists'):03d} ERR {key} already exists"
+        else:
+            self.tuple_space[key] = value
+            tuple_len = len(key) + len(value)
+            self.stats["total_tuple_size"] += tuple_len
+            self.stats["total_key_size"] += len(key)
+            self.stats["total_value_size"] += len(value)
+            return f"{len(f'OK ({key}, {value}) added'):03d} OK ({key}, {value}) added"
 
