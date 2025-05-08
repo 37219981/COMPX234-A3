@@ -113,3 +113,32 @@ class TupleSpaceServer:
             self.stats["total_value_size"] += len(value)
             return f"{len(f'OK ({key}, {value}) added'):03d} OK ({key}, {value}) added"
 
+    def receive_full_message(self, conn):
+        """Receive complete messages (prefixed by protocol length)"""
+        try:
+            len_str = conn.recv(3).decode('utf-8')
+            if not len_str:
+                return None
+            total_len = int(len_str)
+
+            data = len_str
+            while len(data) < total_len:
+                chunk = conn.recv(total_len - len(data)).decode('utf-8')
+                if not chunk:
+                    break
+                data += chunk
+            return data
+        except:
+            return None
+
+    def start(self):
+        """Start Server"""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('0.0.0.0', self.port))
+            s.listen(5)
+            print(f"Server listening on port {self.port}...")
+            while True:
+                conn, addr = s.accept()
+                print(f"New client connected: {addr}")
+                threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()
+
