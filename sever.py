@@ -41,3 +41,35 @@ class TupleSpaceServer:
         while True:
             time.sleep(10)
             self.print_stats()
+
+    def handle_client(self, conn, addr):
+        """Handle individual client connections"""
+        self.stats["client_count"] += 1
+        try:
+            while True:
+                data = self.receive_full_message(conn)
+                if not data:
+                    break
+
+                req_len = int(data[:3])
+                cmd = data[3]
+                key = data[5:data.find(' ', 5)] if cmd != 'P' else data[5:data.find(' ', 5)]
+                value = data[data.find(' ', 5) + 1:] if cmd == 'P' else None
+
+                with self.lock:
+                     self.stats["total_ops"] += 1
+                     response = ""
+                     if cmd == 'R':
+                         self.stats["reads"] += 1
+                         response = self.handle_read(key)
+                     elif cmd == 'G':
+                         self.stats["gets"] += 1
+                         response = self.handle_get(key)
+                     elif cmd == 'P':
+                         self.stats["puts"] += 1
+                         response = self.handle_put(key, value)
+                     else:
+                         response = self.generate_error_response(key, "invalid command")
+                        
+                conn.sendall(response.encode('utf-8'))
+
