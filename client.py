@@ -37,3 +37,10 @@ def main():
                         continue
 
                     s.sendall(request.encode('utf-8'))
+
+                    response = receive_full_response(s)
+                    if not response:
+                        print(f"Connection lost while processing {line}")
+                        break
+
+                    print(f"{line}: {response[4:]}")
